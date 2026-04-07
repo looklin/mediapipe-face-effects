@@ -22,6 +22,7 @@ export class Glasses {
     this.height = height;
     this.needsUpdate = false;
     this.landmarks = null;
+    this.isTracking = false; // 用于标记是否是第一帧识别
     this.loadGlasses();
   }
 
@@ -87,12 +88,8 @@ export class Glasses {
 
     if (this.glasses) {
   
-      // position
-      this.glasses.position.set(
-        midEyes.x,
-        midEyes.y,
-        midEyes.z,
-      )
+      // position smoothing (Lerp)
+      const targetPosition = new THREE.Vector3(midEyes.x, midEyes.y, midEyes.z);
 
       // scale to make glasses
       // as wide as distance between
@@ -102,8 +99,10 @@ export class Glasses {
         ( leftEyeUpper1.y - rightEyeUpper1.y ) ** 2 +
         ( leftEyeUpper1.z - rightEyeUpper1.z ) ** 2
       );
-      const scale = eyeDist / this.scaleFactor;
-      this.glasses.scale.set(scale, scale, scale);
+      
+      // scale smoothing (Lerp)
+      const targetScale = eyeDist / this.scaleFactor;
+      const currentScale = this.glasses.scale.x;
 
       // use two vectors to rotate glasses
       // Vertical Vector from midEyes to noseBottom
@@ -138,7 +137,23 @@ export class Glasses {
         new THREE.Vector3(sideVector.x, 0, sideVector.z)
       ).angleTo(new THREE.Vector3(0, 0, 1)) - (Math.PI / 2);
       
-      this.glasses.rotation.set(xRot, yRot, zRot);
+      // rotation smoothing (Slerp)
+      const targetEuler = new THREE.Euler(xRot, yRot, zRot);
+      const targetQuaternion = new THREE.Quaternion().setFromEuler(targetEuler);
+
+      if (!this.isTracking) {
+        // 第一帧：瞬间移动过去，不要有动画
+        this.glasses.position.copy(targetPosition);
+        this.glasses.scale.set(targetScale, targetScale, targetScale);
+        this.glasses.quaternion.copy(targetQuaternion);
+        this.isTracking = true;
+      } else {
+        // 后续帧：平滑过渡消除抖动
+        this.glasses.position.lerp(targetPosition, 0.4);
+        const smoothedScale = THREE.MathUtils.lerp(currentScale, targetScale, 0.4);
+        this.glasses.scale.set(smoothedScale, smoothedScale, smoothedScale);
+        this.glasses.quaternion.slerp(targetQuaternion, 0.4);
+      }
 
     }
   }
@@ -151,6 +166,7 @@ export class Glasses {
 
   removeGlasses() {
     this.scene.remove(this.glasses);
+    this.isTracking = false; // 离开画面后重置状态
   }
 
   update() {
