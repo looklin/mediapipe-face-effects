@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import { FaceMask } from './face_mask';
 import { Glasses } from './glasses';
 import { VideoBackground } from './video_bg';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
@@ -44,7 +43,6 @@ export class SceneManager {
     this.buildCamera();
     this.buildControls();
     this.buildVideoBg();
-    this.buildFaceMask();
     this.buildGlasses();
     this.buildEnvironment();
   }
@@ -59,14 +57,6 @@ export class SceneManager {
       this.renderer.domElement.width, 
       this.renderer.domElement.height
     );
-  }
-
-  buildFaceMask() {
-    // this component draws faces
-    this.faceMask = new FaceMask(this.scene, 
-      this.renderer.domElement.width, 
-      this.renderer.domElement.height
-    )
   }
 
   buildGlasses() {
@@ -167,13 +157,6 @@ export class SceneManager {
 
     if (this.resizeRendererToDisplaySize()) {
       
-      // facemask needs to scale faces according to 
-      // renderer dimensions
-      this.faceMask.updateDimensions(
-        this.renderer.domElement.width, 
-        this.renderer.domElement.height
-      );
-
       this.glasses.updateDimensions(
         this.renderer.domElement.width,
         this.renderer.domElement.height,
@@ -192,9 +175,6 @@ export class SceneManager {
     // update video background
     this.videoBg.update();
 
-    // update faces mask
-    this.faceMask.update();
-
     // update glasses
     this.glasses.update();
 
@@ -210,7 +190,6 @@ export class SceneManager {
   onLandmarks(image, landmarks) {
     if (image && landmarks) {
       this.videoBg.setImage(image);
-      this.faceMask.updateLandmarks(landmarks);
       this.glasses.updateLandmarks(landmarks);
     }
   }
