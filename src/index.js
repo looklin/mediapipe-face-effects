@@ -10,6 +10,10 @@ const template = `
   <span class="loader">
     Loading ...
   </span>
+  <div style="width: 100%; text-align: center; padding: 10px;">
+    <label for="model-upload" style="cursor: pointer; background: #007bff; color: white; padding: 8px 15px; border-radius: 4px;">Upload .glb Glasses</label>
+    <input type="file" id="model-upload" accept=".glb" style="display: none;" />
+  </div>
   <div>
     <h2>Original Video</h2>
     <video class="input_video" controls playsinline>
@@ -61,6 +65,18 @@ async function main() {
 
   sceneManager = new SceneManager(canvas, debug, useOrtho);
   facemeshLandmarksProvider = new FacemeshLandmarksProvider(onLandmarks);
+
+  // Listen for .glb file uploads
+  const fileInput = document.getElementById('model-upload');
+  fileInput.addEventListener('change', (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const objectURL = URL.createObjectURL(file);
+      sceneManager.changeGlassesModel(objectURL);
+      // Allow re-uploading the same file
+      fileInput.value = '';
+    }
+  });
 
   if (confirm("Use Camera?")) {
     // unload video

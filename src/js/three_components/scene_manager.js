@@ -66,6 +66,12 @@ export class SceneManager {
     )
   }
 
+  changeGlassesModel(fileUrl) {
+    if (this.glasses) {
+      this.glasses.changeModel(fileUrl);
+    }
+  }
+
   buildControls() {
     if (this.debug) {
       this.controls = new OrbitControls(

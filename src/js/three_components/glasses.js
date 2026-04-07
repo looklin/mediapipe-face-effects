@@ -36,6 +36,30 @@ export class Glasses {
     this.glasses.name = 'glasses';
   }
 
+  async changeModel(fileUrl) {
+    if (this.glasses) {
+      this.removeGlasses();
+    }
+
+    try {
+      this.glasses = await loadModel(fileUrl);
+
+      const bbox = new THREE.Box3().setFromObject(this.glasses);
+      const size = bbox.getSize(new THREE.Vector3());
+      this.scaleFactor = size.x;
+
+      this.glasses.name = 'glasses';
+      this.needsUpdate = true;
+
+      if (this.previousUrl) {
+        URL.revokeObjectURL(this.previousUrl);
+      }
+      this.previousUrl = fileUrl;
+    } catch (e) {
+      console.error("Failed to load new glasses model", e);
+    }
+  }
+
   updateDimensions(width, height) {
     this.width = width;
     this.height = height;
